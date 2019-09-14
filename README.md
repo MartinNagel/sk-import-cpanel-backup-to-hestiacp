@@ -1,5 +1,5 @@
 # sk-importer
-Import cPanel backup in vestacp
+Import cPanel backup in hestiacp
 
 Beta 0.5.3
 
@@ -9,7 +9,7 @@ Beta 0.5.3
 Beta 0.5
 
 - Improve database restauration.
-- Just restore databases and vestacp rebuild users, this add compatibility to mysql 5.7 ( ubuntu 16+ )
+- Just restore databases and hestiacp rebuild users, this add compatibility to mysql 5.7 ( ubuntu 16+ )
 - Try restore SSL, something fail if backup not have CA
 - Some bugs fixed and some function added to test if have rsync and file installed
 
@@ -45,3 +45,6 @@ or
 bash sk-cpanel-importer-05.sh cpanel-backup.tar.gz MX
 
 Second option will restore your MX, this help people who use google apps, office 365 or remote mail system
+
+# Credits
+Thanks to @Skamasle for made this script for originally to work with vestacp
