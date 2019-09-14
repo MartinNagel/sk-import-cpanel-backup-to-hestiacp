@@ -1,7 +1,7 @@
 #!/bin/bash
 # Author / Idea: Maks Usmanov - Skamasle and good people who help to improve: 
 # Thanks to https://github.com/Skamasle/sk-import-cpanel-backup-to-vestacp/graphs/contributors
-# Github: https://github.com/Skamasle/sk-import-cpanel-backup-to-vestacp
+# Github of the original project: https://github.com/Skamasle/sk-import-cpanel-backup-to-vestacp
 # Run at your own risk
 # This script take cpanel full backup and import it in vestacp account
 # This script can import databases and database users and password, 
@@ -17,11 +17,11 @@ if [ $# -lt 1 ]; then
     echo "usage: bash $0 cpanel-backup.tar.gz MX"
     exit 1
 fi
-if [[ $PATH != *"/usr/local/vesta/bin"* ]]; then
-    VESTA=/usr/local/vesta
+if [[ $PATH != *"/usr/local/hestia/bin"* ]]; then
+    VESTA=/usr/local/hestia
     export VESTA
     
-    PATH=$PATH:/usr/local/vesta/bin
+    PATH=$PATH:/usr/local/hestia/bin
     export PATH
 fi
 if [ ! -e /usr/bin/rsync ] || [ ! -e /usr/bin/file ] ; then
@@ -42,7 +42,7 @@ sk_vesta_package=default
 #
 # Only for gen_password but I dont like it, a lot of lt
 # maybe will use it for other functions :)
-source /usr/local/vesta/func/main.sh 
+source /usr/local/hestia/func/main.sh 
 sk_file=$1
 sk_tmp=sk_tmp
 # I see than this is stupid, not know why is here.
@@ -112,8 +112,8 @@ else
 fi
 # So get real user, may be we need it after -- oh yes, not remember where but this save my day march 19 2017 on 0.5
 sk_real_cp_user=$(grep "user:" userdata/${main_domain1} | cut -d " " -f2)
-if /usr/local/vesta/bin/v-list-users | grep -q -w $sk_cp_user ;then
-	echo "User alredy exist on your server, maybe on vestacp or in your /etc/passwd"
+if /usr/local/hestia/bin/v-list-users | grep -q -w $sk_cp_user ;then
+	echo "User alredy exist on your server, maybe on Hestia or in your /etc/passwd"
 	echo "**"
 	echo "Grep your /etc/passwd"
 	grep -q -w $sk_cp_user /etc/passwd
@@ -122,12 +122,12 @@ if /usr/local/vesta/bin/v-list-users | grep -q -w $sk_cp_user ;then
 	rm -rf /root/${sk_tmp}
 	exit 21
 else
-	echo "Generate random password for $sk_cp_user and create Vestacp Account ..."
+	echo "Generate random password for $sk_cp_user and create HestiaCP Account ..."
 	sk_password=$(generate_password)
-	/usr/local/vesta/bin/v-add-user $sk_cp_user $sk_password administrator@${main_domain1} $sk_vesta_package $sk_cp_user $sk_cp_user
+	/usr/local/hestia/bin/v-add-user $sk_cp_user $sk_password administrator@${main_domain1} $sk_vesta_package $sk_cp_user $sk_cp_user
 	if [ $? != 0 ]; then
 		tput setaf 2
-		echo "Stop Working... Cant create user...if is fresh install of vestacp try reboot or reopen session check bug https://bugs.vestacp.com/issues/138"
+		echo "Stop Working... Cant create user...if is fresh install of hestiacp try reboot or reopen session check bug https://bugs.vestacp.com/issues/138"
 		tput sgr0
 		rm -rf "/root/${sk_tmp}"
 		exit 4
@@ -170,18 +170,18 @@ do
 # default cpanel user has all database privileges
 # if you use default user in your config files to connect with database
 # you will need remove && [ "$userdb" != "$sk_cp_user" ] to restore main user, but
-# this will cause database duplication in db.conf and will interfer with vestacp backups 
+# this will cause database duplication in db.conf and will interfer with hestiacp backups 
 			if [ "$userdb" == "$user" ] && [ "$userdb" != "$sk_cp_user" ] && [ "$userdb" != "$sk_real_cp_user" ] ; then
-				echo "DB='$db' DBUSER='$userdb' MD5='$end_user_pass' HOST='localhost' TYPE='mysql' CHARSET='UTF8' U_DISK='0' SUSPENDED='no' TIME='$TIME' DATE='$DATE'" >> /usr/local/vesta/data/users/${sk_cp_user}/db.conf
+				echo "DB='$db' DBUSER='$userdb' MD5='$end_user_pass' HOST='localhost' TYPE='mysql' CHARSET='UTF8' U_DISK='0' SUSPENDED='no' TIME='$TIME' DATE='$DATE'" >> /usr/local/hestia/data/users/${sk_cp_user}/db.conf
 			fi
 		done
 done
 
-# Leave vesta restore passwords and create users
+# Leave hestia restore passwords and create users
 tput setaf 2
 echo "Rebuild databases files for $sk_cp_user"
 tput sgr0 
-/usr/local/vesta/bin/v-rebuild-databases $sk_cp_user
+/usr/local/hestia/bin/v-rebuild-databases $sk_cp_user
 
 ## end mysql
 
@@ -207,7 +207,7 @@ function get_domain_path() {
 		while read sk_domain path
 	do
 		if [ -e userdata/${sk_domain} ];then
-			/usr/local/vesta/bin/v-add-domain $sk_cp_user $sk_domain
+			/usr/local/hestia/bin/v-add-domain $sk_cp_user $sk_domain
 			echo "Restoring $sk_domain..."
 			rm -f /home/${sk_cp_user}/web/${sk_domain}/public_html/index.html
 			if [ "$sk_debug" != 0 ]; then
@@ -229,7 +229,7 @@ done
 } 
 get_domain_path < sk_sds2
 
-/usr/local/vesta/bin/v-add-domain $sk_cp_user $main_domain1
+/usr/local/hestia/bin/v-add-domain $sk_cp_user $main_domain1
 # need it for restore main domain
 if [ ! -e exclude_path ];then
 	touch exclude_path
@@ -267,7 +267,7 @@ if [[ "$sk_maild" != "cur" && "$sk_maild" != "new" && "$sk_maild" != "tmp"  ]]; 
 					
 					echo "Create and restore mail account: $sk_mail_account@$sk_maild"
 					sk_mail_pass1=$(generate_password)		
-					/usr/local/vesta/bin/v-add-mail-account $sk_cp_user $sk_maild $sk_mail_account $sk_mail_pass1
+					/usr/local/hestia/bin/v-add-mail-account $sk_cp_user $sk_maild $sk_mail_account $sk_mail_pass1
 					mv ${sk_maild}/${sk_mail_account} /home/${sk_cp_user}/mail/${sk_maild}
 					chown ${sk_cp_user}:mail -R /home/${sk_cp_user}/mail/${sk_maild}
 					find /home/${sk_cp_user}/mail/${sk_maild} -type f -name 'dovecot*' -delete
@@ -293,13 +293,13 @@ else
 fi
 
 
-sk_domains=$(/usr/local/vesta/bin/v-list-web-domains $sk_cp_user plain |awk '{ print  $1 }')
+sk_domains=$(/usr/local/hestia/bin/v-list-web-domains $sk_cp_user plain |awk '{ print  $1 }')
 
 for ssl in $sk_domains
 do
 	if [ -e ${sk_importer_in}/sslcerts/${ssl}.key ]; then
 		echo "Found SSL for ${ssl}, restoring..."
-		/usr/local/vesta/bin/v-add-web-domain-ssl $sk_cp_user $ssl ${sk_importer_in}/sslcerts/
+		/usr/local/hestia/bin/v-add-web-domain-ssl $sk_cp_user $ssl ${sk_importer_in}/sslcerts/
 	fi
 done
 function sk_restore_pass () {
@@ -309,7 +309,7 @@ sk_new_pass=$(cat $sk_importer_in/shadow)
 # sed is a hero but replace is easy and not need space // :D
 replace "$sk_cp_user:$sk_actual_pass" "$sk_cp_user:$sk_new_pass" -- /etc/shadow
 tput setaf 5
-echo "Old  cPanel password restored in $sk_cp_user vesta account"
+echo "Old  cPanel password restored in $sk_cp_user hestia account"
 tput sgr0
 }
 function sk_fix_mx () {
@@ -320,17 +320,17 @@ cd $sk_importer_in/dnszones
 for sk_mx in $sk_domains 
 do
 	if [ -e $sk_mx.db ]; then
-		sk_id=$(grep MX /usr/local/vesta/data/users/${sk_cp_user}/dns/${sk_mx}.conf |tr "'" " " | cut -d " " -f 2)
-		/usr/local/vesta/bin/v-delete-dns-record $sk_cp_user $sk_mx $sk_id
+		sk_id=$(grep MX /usr/local/hestia/data/users/${sk_cp_user}/dns/${sk_mx}.conf |tr "'" " " | cut -d " " -f 2)
+		/usr/local/hestia/bin/v-delete-dns-record $sk_cp_user $sk_mx $sk_id
 		grep MX ${sk_mx}.db |  awk '{for(sk=NF;sk>=1;sk--) printf "%s ", $sk;print ""}' | while read value pri ns rest
 			do
 				if [ "$ns" == "MX" ];then
 					if [ "$value" == "$sk_mx" ] || [ "$value" == "$sk_mx." ];then 
 						value=mail.$value
 					fi
-					/usr/local/vesta/bin/v-add-dns-record $sk_cp_user $sk_mx @ MX $value $pri
+					/usr/local/hestia/bin/v-add-dns-record $sk_cp_user $sk_mx @ MX $value $pri
 					if [[ "$?" -ge "1" ]]; then
-						/usr/local/vesta/bin/v-add-dns-record $sk_cp_user $sk_mx @ MX mail.${sk_mx} 0
+						/usr/local/hestia/bin/v-add-dns-record $sk_cp_user $sk_mx @ MX mail.${sk_mx} 0
 					fi
 					echo "MX fixed in $sk_mx"
 				fi
